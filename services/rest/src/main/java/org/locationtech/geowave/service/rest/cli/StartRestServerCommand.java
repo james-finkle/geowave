@@ -9,6 +9,7 @@
 package org.locationtech.geowave.service.rest.cli;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import org.locationtech.geowave.core.cli.annotations.GeowaveOperation;
 import org.locationtech.geowave.core.cli.api.Command;
 import org.locationtech.geowave.core.cli.api.DefaultOperation;
@@ -16,6 +17,7 @@ import org.locationtech.geowave.core.cli.api.OperationParams;
 import org.locationtech.geowave.service.rest.ApiRestletApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
@@ -26,21 +28,47 @@ public class StartRestServerCommand extends DefaultOperation implements Command 
 
   @ParametersDelegate
   private StartRestServerCommandOptions options = new StartRestServerCommandOptions();
+  @Parameter(
+      names = {"--interactive", "-i"},
+      description = "Whether to prompt for user input to end the process")
+  private boolean interactive = true;
 
   /** Prep the driver & run the operation. */
   @Override
   public void execute(final OperationParams params) {
-
-    ApiRestletApplication server = null;
-
     try {
-      server = ApiRestletApplication.getInstance();
-      server.startUp();
+      final ApiRestletApplication server = new ApiRestletApplication();
+      server.start();
+
+      LOGGER.info("GeoWave rest server started successfully");
+
+      if (interactive) {
+        System.out.println("hit any key to shutdown ..");
+        System.in.read();
+        System.out.println("Shutting down!");
+        server.stop();
+      } else {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+          @Override
+          public void run() {
+            try {
+              server.stop();
+            } catch (final Exception e) {
+              LOGGER.warn("Unable to shutdown redis", e);
+              System.out.println("Error shutting down redis.");
+            }
+            System.out.println("Shutting down!");
+          }
+        });
+
+        while (true) {
+          Thread.sleep(TimeUnit.MILLISECONDS.convert(Long.MAX_VALUE, TimeUnit.DAYS));
+        }
+      }
     } catch (Exception e) {
       LOGGER.error("Exception encountered starting rest server", e);
     }
 
-    LOGGER.info("GeoWave rest server started successfully");
   }
 
   public void setCommandOptions(final StartRestServerCommandOptions opts) {

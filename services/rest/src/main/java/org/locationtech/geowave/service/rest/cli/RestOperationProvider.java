@@ -12,7 +12,7 @@ import org.locationtech.geowave.core.cli.spi.CLIOperationProviderSpi;
 
 public class RestOperationProvider implements CLIOperationProviderSpi {
   private static final Class<?>[] OPERATIONS =
-      new Class<?>[] {StartRestServerCommand.class, StopRestServerCommand.class, RestSection.class};
+      new Class<?>[] {StartRestServerCommand.class, RestSection.class};
 
   @Override
   public Class<?>[] getOperations() {
