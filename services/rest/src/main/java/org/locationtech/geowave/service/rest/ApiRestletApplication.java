@@ -45,6 +45,16 @@ public class ApiRestletApplication extends Application {
   private final ConcurrentHashMap<String, Future> asyncOperationStatuses =
       new ConcurrentHashMap<>();
 
+  private static ApiRestletApplication instance;
+
+  static {
+    instance = new ApiRestletApplication();
+  }
+
+  public static ApiRestletApplication getInstance() {
+    return instance;
+  }
+
   public ApiRestletApplication() {
     super();
 
@@ -178,5 +188,17 @@ public class ApiRestletApplication extends Application {
       return hostname + ":" + port;
     }
     return "localhost:8080";
+  }
+
+
+  public void startUp() throws Exception {
+    if (!this.isStarted())
+      this.start();
+  }
+
+  public void shutDown() throws Exception {
+    if (this.isStarted()) {
+      this.stop();
+    }
   }
 }
